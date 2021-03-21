@@ -1,12 +1,6 @@
+# Base Image
 FROM python:3.7-slim
 LABEL maintainer="MarcLamberti"
-
-# Setting default values for variables but they will be overwritten by the command from the readme file
-ARG USER_ID=22
-ARG GROUP_ID=22
-
-# Deleting user if exists, if this line causes errors comment it
-RUN userdel -f www-data
 
 # Arguments that can be set with docker build
 ARG AIRFLOW_VERSION=1.10.12
@@ -40,21 +34,15 @@ RUN apt-get update -yqq && \
     locales \
     && apt-get clean
 
-RUN  apt-get -yq update && \
-     apt-get -yqq install ssh
-
 COPY ./requirements-python3.7.txt /requirements-python3.7.txt
 
-COPY ./requirements.txt /requirements.txt
-
-# Upgrade pip 
-# Create users
+# Upgrade pip
+# Create airflow user 
 # Install apache airflow with subpackages
 RUN pip install --upgrade pip && \
-    groupadd -g ${GROUP_ID} airflow && \
-    useradd -ms /bin/bash -d ${AIRFLOW_HOME} -u ${USER_ID} -g airflow airflow  && \
+    useradd -ms /bin/bash -d ${AIRFLOW_HOME} airflow && \
     pip install apache-airflow[crypto,celery,postgres,kubernetes,docker]==${AIRFLOW_VERSION} --constraint /requirements-python3.7.txt
-    
+
 # Copy the entrypoint.sh from host to container (at path AIRFLOW_HOME)
 COPY ./entrypoint.sh ./entrypoint.sh
 
@@ -77,4 +65,6 @@ RUN mkdir dags
 EXPOSE 8080
 
 # Execute the entrypoint.sh
-CMD [ "/entrypoint.sh" ]
+ENTRYPOINT [ "/entrypoint.sh" ]
+
+    
