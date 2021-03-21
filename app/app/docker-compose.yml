@@ -1,0 +1,28 @@
+version: "3.5"
+
+services:
+
+  sftp:
+    ports:
+      - '22:22'
+    container_name: sftp
+    build: ./app/sftp-storage
+    volumes:
+      - ./app/sftp-storage/contents:/home/demo/sftp/
+
+  airflow:
+    build: ./app/airflow
+    restart: always
+    container_name: airflow
+    volumes:
+      - ./app/airflow/config/airflow.cfg:/usr/local/airflow/airflow.cfg
+      - ./app/airflow/config/dags:/usr/local/airflow/dags
+      - ./app/srflp-solver:/usr/local/airflow/srflp-solver
+    ports:
+      - 8080:8080
+    healthcheck:
+      test: [ "CMD", "nc", "-z", "airflow", "8080" ]
+      timeout: 45s
+      interval: 10s
+      retries: 10
+
